@@ -96,9 +96,7 @@
 
 #include <SPI.h>
 #include <Wire.h>
-#include "MPU9250_QuaternionCompass.cpp"
-#include "sensesp.h"
-#include <RemoteDebug.h>
+#include "MPU9250_QuaternionCompass.h"
 
 #if defined(ARDUINO_SAMD_ZERO) && defined(SERIAL_PORT_USBVIRTUAL)
 #define Serial SERIAL_PORT_USBVIRTUAL                               // Required for Serial on Zero based boards
@@ -180,7 +178,7 @@ Mag_z_scale = 1.17;
   is east of true north, and negative when it is to the west.
   Substitute your magnetic declination for the "Declination" shown below.
 */
-#define True_North false          // change this to "true" for True North                
+boolean True_North = false;          // change this to "true" for True North                
 // float Declination = +22.5833;     // substitute your magnetic declination
 float Declination = 0;
 
@@ -194,7 +192,7 @@ unsigned long Timer1 = 500000L;   // 500mS loop ... used when sending data to to
 unsigned long Stop1;              // Timer1 stops when micros() exceeds this value
 
 // ----- MPU-9250 addresses
-#define MPU9250_ADDRESS     0x68  // Device address when ADO = 0; Use 0x69 when AD0 = 1
+uint8_t   MPU9250_ADDRESS     =  0x68;  // Device address when ADO = 0; Use 0x69 when AD0 = 1
 #define AK8963_ADDRESS      0x0C  //  Address of magnetometer
 
 /*
@@ -430,13 +428,33 @@ float ax, ay, az, gx, gy, gz, mx, my, mz;           // variables to hold latest 
 float q[4] = {1.0f, 0.0f, 0.0f, 0.0f};              // vector to hold quaternion
 float eInt[3] = {0.0f, 0.0f, 0.0f};                 // vector to hold integral error for Mahony method
 
+uint  read_delay = 5000;
+
 // -----------------
 // setup()
 // -----------------
 
+MPU9250::MPU9250(unit8_t addr,uint TASK,boolean True_North,float Declination,uint read_delay,String config_path) :
+  Sensor(config_path),
+  addr{addr},
+  TASK{TASK},
+  True_North{True_North},
+  Declination{Declination}
+{
+  className = "MPU9250";
+  load_configuration();
+  if (!perform_setup()) {
+    debugI("Error initializing MPU9250");
+  }
+  else {
+    app.onRepeat(5,[this]() {
+      read_value();
+    }
+  }
+}
 
 
-void setup()
+boolean perform_setup()
 {
   Wire.begin();
   Wire.setClock(400000);                                // 400 kbit/sec I2C speed
@@ -491,7 +509,7 @@ void setup()
   lcd.setCursor(0, 1);
   lcd.print(F("level surface"));
   delay(2000);
-
+  /*
   if (TASK == 2) {
     lcd.clear();
     lcd.setCursor(0, 0);
@@ -518,7 +536,9 @@ void setup()
     lcd.print(F("115200 bauds"));
     delay(2000);
   }
+  */
 #endif
+  
 
   // ----- Read the WHO_AM_I register, this is a good test of communication
   byte c = readByte(MPU9250_ADDRESS, WHO_AM_I_MPU9250);  // Read WHO_AM_I register for MPU-9250
@@ -530,8 +550,11 @@ void setup()
       Serial.println(F("MPU9250 is online..."));
       Serial.println("");
     }
+    else {
+      return false;
+    }
 
-      MPU9250SelfTest(SelfTest); // Start by performing self test and reporting values
+    MPU9250SelfTest(SelfTest); // Start by performing self test and reporting values
     if ((TASK ==1) || (showAllDebug)) {
       Serial.println(F("Self test (14% acceptable)"));
       Serial.print(F("x-axis acceleration trim within : ")); Serial.print(SelfTest[0], 1); Serial.println(F("% of factory value"));
@@ -542,7 +565,7 @@ void setup()
       Serial.print(F("z-axis gyration trim within : ")); Serial.print(SelfTest[5], 1); Serial.println(F("% of factory value"));
       Serial.println("");
     }
-      calibrateMPU9250(gyroBias, accelBias); // Calibrate gyro and accelerometers, load biases in bias registers
+    calibrateMPU9250(gyroBias, accelBias); // Calibrate gyro and accelerometers, load biases in bias registers
 
     if ((TASK ==1) || (showAllDebug)) {
       Serial.println(F("MPU9250 accelerometer bias"));
@@ -565,6 +588,9 @@ void setup()
     if ((TASK ==1) || (showAllDebug)) {
       Serial.println(F("MPU9250 initialized for active data mode....")); // Initialize device for active mode read of acclerometer, gyroscope, and temperature
       Serial.println("");
+    }
+    else {
+      return false;
     }
 
     // Read the WHO_AM_I register of the magnetometer, this is a good test of communication
@@ -598,7 +624,8 @@ void setup()
       Serial.print(F("Could not connect to AK8963: 0x"));
       Serial.println(d, HEX);
       Serial.println("");
-      while (1) ; // Loop forever if communication doesn't happen
+      return false;
+      //  while (1) ; // Loop forever if communication doesn't happen
     }
   }
   else
@@ -609,7 +636,8 @@ void setup()
     Serial.print(F("Could not connect to MPU9250: 0x"));
     Serial.println(c, HEX);
     Serial.println("");
-    while (1) ; // Loop forever if communication doesn't happen
+    return false;
+    // while (1) ; // Loop forever if communication doesn't happen
   }
 
   // --------------------------
@@ -680,14 +708,15 @@ void setup()
     Serial.println(F(";"));
 
     // ----- Halt program
-    while (true);
+    return true;
+    //  while (true);
   }
 }
 
 // ----------
 // loop()
 // ----------
-void loop()
+void read_values()
 {
   refresh_data();                              // This must be done each time through the loop
   calc_quaternion();                           // This must be done each time through the loop
