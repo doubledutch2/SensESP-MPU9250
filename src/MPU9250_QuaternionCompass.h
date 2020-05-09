@@ -16,8 +16,11 @@ class MPU9250 : public Sensor {
             float Declination = 0,
             uint read_delay = 1000,
             String config_path = "");
-    MPU9250 myIMU;
+    //  MPU9250 myIMU;
     // uint8_t MPU9250_ADDRESS;
+    uint TASK = 6;
+    boolean True_North = true;
+    float Declination = 0;
     boolean SensorRead = false;
     uint  read_delay;
     void read_values(boolean AHRS);
@@ -25,6 +28,34 @@ class MPU9250 : public Sensor {
   private:
     uint8_t addr;
     boolean check_status();
+    boolean perform_setup();
+    void  read_values();
+    void  getMres();
+    void  getGres();
+    void  getAres();
+    void  readAccelData();
+    void  readGyroData();
+    void  readMagData();
+    void  readTempData();
+    void  initAK8963();
+    void  initMPU9250();
+    void  calibrateMPU9250();
+    void  magCalMPU9250();
+    void  MPU9250SelfTest();
+    void  writeByte();
+    byte  readByte(uint8,int);
+    void  readBytes();
+    void  MadgwickQuaternionUpdate();
+    void  MahonyQuaternionUpdate();
+    void  refresh_data();
+    void  calc_quaternion();
+    void  compass_cal();
+    void  compass_rose();
+    void  view_registers_SM();
+    void  view_heading_SM();
+    void  view_heading_LCD();
+    void  print_number();
+
     //  virtual JsonObject& get_configuration(JsonBuffer& buf) override;
     //  virtual bool set_configuration(const JsonObject& config) override;
     //  virtual String get_config_schema() override;
@@ -36,8 +67,7 @@ class MPU9250 : public Sensor {
 
 enum MPU9250ValType { Roll,
                       Pitch,
-                      Heading
-                      temperature};
+                      Heading};
 
 /*
 // MPU9250value reads and outputs the specified value of a MPU9250 sensor.

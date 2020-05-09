@@ -434,7 +434,7 @@ uint  read_delay = 5000;
 // setup()
 // -----------------
 
-MPU9250::MPU9250(unit8_t addr,uint TASK,boolean True_North,float Declination,uint read_delay,String config_path) :
+MPU9250::MPU9250(uint8_t addr,uint TASK,boolean True_North,float Declination,uint read_delay,String config_path) :
   Sensor(config_path),
   addr{addr},
   TASK{TASK},
@@ -448,13 +448,13 @@ MPU9250::MPU9250(unit8_t addr,uint TASK,boolean True_North,float Declination,uin
   }
   else {
     app.onRepeat(5,[this]() {
-      read_value();
-    }
+      read_values();
+    });
   }
 }
 
 
-boolean perform_setup()
+boolean MPU9250::perform_setup()
 {
   Wire.begin();
   Wire.setClock(400000);                                // 400 kbit/sec I2C speed
@@ -716,7 +716,7 @@ boolean perform_setup()
 // ----------
 // loop()
 // ----------
-void read_values()
+void MPU9250::read_values()
 {
   refresh_data();                              // This must be done each time through the loop
   calc_quaternion();                           // This must be done each time through the loop
@@ -753,7 +753,7 @@ void read_values()
 // getMres()
 // -------------------
 /* Get magnetometer resolution */
-void getMres() {
+void MPU9250::getMres() {
   switch (Mscale)
   {
     // Possible magnetometer scales (and their register bit settings) are:
@@ -771,7 +771,7 @@ void getMres() {
 // getGres()
 // -------------------
 /* Get gyro resolution */
-void getGres() {
+void MPU9250::getGres() {
   switch (Gscale)
   {
     // Possible gyro scales (and their register bit settings) are:
@@ -796,7 +796,7 @@ void getGres() {
 // getAres()
 // -------------------
 /* Get accelerometer resolution */
-void getAres() {
+void MPU9250::getAres() {
   switch (Ascale)
   {
     // Possible accelerometer scales (and their register bit settings) are:
@@ -821,7 +821,7 @@ void getAres() {
 // readAccelData()
 // -------------------
 /* Read accelerometer registers */
-void readAccelData(short * destination)
+void MPU9250::readAccelData(short * destination)
 {
   byte rawData[6];  // x/y/z accel register data stored here
   readBytes(MPU9250_ADDRESS, ACCEL_XOUT_H, 6, &rawData[0]);  // Read the six raw data registers into data array
@@ -834,7 +834,7 @@ void readAccelData(short * destination)
 // readGyroData()
 // -------------------
 /* Read gyro registers */
-void readGyroData(short * destination)
+void MPU9250::readGyroData(short * destination)
 {
   byte rawData[6];  // x/y/z gyro register data stored here
   readBytes(MPU9250_ADDRESS, GYRO_XOUT_H, 6, &rawData[0]);  // Read the six raw data registers sequentially into data array
@@ -847,7 +847,7 @@ void readGyroData(short * destination)
 // readMagData()
 // -------------------
 /* Read magnetometer registers */
-void readMagData(short * destination)
+void MPU9250::readMagData(short * destination)
 {
   byte rawData[7];  // x/y/z gyro register data, ST2 register stored here, must read ST2 at end of data acquisition
   if (readByte(AK8963_ADDRESS, AK8963_ST1) & 0x01) { // wait for magnetometer data ready bit to be set
@@ -865,7 +865,7 @@ void readMagData(short * destination)
 // readTempData()
 // -------------------
 /* Read temperature */
-short readTempData()
+short MPU9250::readTempData()
 {
   byte rawData[2];  // x/y/z gyro register data stored here
   readBytes(MPU9250_ADDRESS, TEMP_OUT_H, 2, &rawData[0]);  // Read the two raw data registers sequentially into data array
@@ -876,7 +876,7 @@ short readTempData()
 // initAK8963()
 // -------------------
 /* Initialize the AK8963 magnetometer */
-void initAK8963(float * destination)
+void MPU9250::initAK8963(float * destination)
 {
   // First extract the factory calibration for each magnetometer axis
   byte rawData[3];  // x/y/z gyro calibration data stored here
@@ -901,7 +901,7 @@ void initAK8963(float * destination)
 // initMPU9250()
 // -------------------
 /* Initialize the MPU9250|MPU6050 chipset */
-void initMPU9250()
+void MPU9250::initMPU9250()
 {
   // -----wake up device
   writeByte(MPU9250_ADDRESS, PWR_MGMT_1, 0x00); // Clear sleep mode bit (6), enable all sensors
@@ -966,7 +966,7 @@ void initMPU9250()
   Function which accumulates gyro and accelerometer data after device initialization. It calculates the average
   of the at-rest readings and then loads the resulting offsets into accelerometer and gyro bias registers.
 */
-void calibrateMPU9250(float * dest1, float * dest2)
+void MPU9250::calibrateMPU9250(float * dest1, float * dest2)
 {
   byte data[12]; // data array to hold accelerometer and gyro x, y, z, data
   unsigned short ii, packet_count, fifo_count;
@@ -1134,7 +1134,7 @@ void calibrateMPU9250(float * dest1, float * dest2)
   Function which accumulates magnetometer data after device initialization.
   It calculates the bias and scale in the x, y, and z axes.
 */
-void magCalMPU9250(float * bias_dest, float * scale_dest)
+void MPU9250::magCalMPU9250(float * bias_dest, float * scale_dest)
 {
   unsigned short ii = 0, sample_count = 0;
   short mag_max[3]  = { -32768, -32768, -32768},
@@ -1219,7 +1219,7 @@ void magCalMPU9250(float * bias_dest, float * scale_dest)
 // MPU9250SelfTest()
 // ------------------
 /* Accelerometer and gyroscope self test; check calibration wrt factory settings */
-void MPU9250SelfTest(float * destination) // Should return percent deviation from factory trim values, +/- 14 or less deviation is a pass
+void MPU9250::MPU9250SelfTest(float * destination) // Should return percent deviation from factory trim values, +/- 14 or less deviation is a pass
 {
   byte rawData[6] = {0, 0, 0, 0, 0, 0};
   byte selfTest[6];
@@ -1306,7 +1306,7 @@ void MPU9250SelfTest(float * destination) // Should return percent deviation fro
 // --------------
 // writeByte()
 // --------------
-void writeByte(byte address, byte subAddress, byte data)
+void MPU9250::writeByte(byte address, byte subAddress, byte data)
 {
   Wire.beginTransmission(address);  // Initialize the Tx buffer
   Wire.write(subAddress);           // Put slave register address in Tx buffer
@@ -1314,7 +1314,7 @@ void writeByte(byte address, byte subAddress, byte data)
   Wire.endTransmission();           // Send the Tx buffer
 }
 
-byte readByte(byte address, byte subAddress)
+byte MPU9250::readByte(byte address, byte subAddress)
 {
   byte data; // `data` will store the register data
   Wire.beginTransmission(address);         // Initialize the Tx buffer
@@ -1328,7 +1328,7 @@ byte readByte(byte address, byte subAddress)
 // --------------
 // readBytes()
 // --------------
-void readBytes(byte address, byte subAddress, byte count, byte * dest)
+void MPU9250::readBytes(byte address, byte subAddress, byte count, byte * dest)
 {
   Wire.beginTransmission(address);   // Initialize the Tx buffer
   Wire.write(subAddress);            // Put slave register address in Tx buffer
@@ -1351,7 +1351,7 @@ void readBytes(byte address, byte subAddress, byte count, byte * dest)
   The performance of the orientation filter is at least as good as conventional Kalman-based filtering algorithms
   but is much less computationally intensive---it can be performed on a 3.3 V Pro Mini operating at 8 MHz!
 */
-void MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz)
+void MPU9250::MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz)
 {
   float q1 = q[0], q2 = q[1], q3 = q[2], q4 = q[3];   // short name local variable for readability
   float norm;
@@ -1449,7 +1449,7 @@ void MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, float gy, 
   Similar to Madgwick scheme but uses proportional and integral filtering
   on the error between estimated reference vectors and measured ones.
 */
-void MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz)
+void MPU9250:MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz)
 {
   float q1 = q[0], q2 = q[1], q3 = q[2], q4 = q[3];   // short name local variable for readability
   float norm;
@@ -1544,7 +1544,7 @@ void MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, fl
 // refresh_data()
 // ------------------------
 /* Get current MPU-9250 register values */
-void refresh_data()
+void MPU9250:refresh_data()
 {
   // ----- If intPin goes high, all data registers have new data
   if (readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
@@ -1603,7 +1603,7 @@ void refresh_data()
 // calc_quaternion()
 // ------------------------
 /* Send current MPU-9250 register values to Mahony quaternion filter */
-void calc_quaternion()
+void MPU9250:calc_quaternion()
 {
   Now = micros();
   deltat = ((Now - lastUpdate) / 1000000.0f); // set integration time by time elapsed since last filter update
@@ -1634,7 +1634,7 @@ void calc_quaternion()
 // compass_cal()
 // ------------------------
 /* Obtain magnetometer offsets and scale-factors using Processing "compass_cal.pde" */
-void compass_cal()
+void MPU9250:compass_cal()
 {
   // ----- Locals
   float
@@ -1681,7 +1681,7 @@ void compass_cal()
 // compass_rose()
 // ------------------------
 /* View heading using Processing "compass_rose.pde" */
-void compass_rose()
+void MPU9250:compass_rose()
 {
   // ----- read input character
   if (Serial.available()) {
@@ -1729,7 +1729,7 @@ void compass_rose()
 // view_registers_SM()
 // ------------------------
 /* View registers on serial monitor */
-void view_registers_SM()
+void MPU9250:view_registers_SM()
 {
   // ----- Print accelerometer values
   Serial.print("        Accel(mg)");
@@ -1760,7 +1760,7 @@ void view_registers_SM()
 // view_heading_SM()
 // ------------------------
 /* View heading on serila monitor */
-void view_heading_SM()
+void MPU9250:view_heading_SM()
 {
   //    Serial.print("Accel");
   //    print_number((short)(1000 * ax));
@@ -1856,7 +1856,7 @@ void view_heading_SM()
 // ------------------------
 // view_heading_LCD()
 // ------------------------
-void view_heading_LCD()
+void MPU9250:view_heading_LCD()
 {
   // ----- calculate pitch , roll, and yaw (radians)
   pitch = asin(2.0f * (q[1] * q[3] - q[0] * q[2]));
@@ -1935,7 +1935,7 @@ void view_heading_LCD()
 // print_number()
 // ------------------------
 /* Overloaded routine to stop integer numbers jumping around */
-long print_number(short number) {
+long MPU9250:print_number(short number) {
   String myString = String(number);
   short numberChars = myString.length();
   for (short i = 0; i < 6 - numberChars; i++) {
@@ -1948,7 +1948,7 @@ long print_number(short number) {
 // print_number()
 // ------------------------
 /* Overloaded routine to stop float numbers jumping around */
-float print_number(float number) {
+float MPU9250:print_number(float number) {
   String myString = String(number);
   short numberChars = myString.length();
   for (short i = 0; i < 6 - numberChars; i++) {
