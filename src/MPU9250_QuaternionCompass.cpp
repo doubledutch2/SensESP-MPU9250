@@ -1,6 +1,6 @@
 /*
   Credit for this code goes to LINGIB - and it originates instructables.
-  It was adapted by LdB to work with SensESP
+  It was adapted by LdB (May 2020) to work with SensESP 
 
   It is designed to run witn ESP8266
 
@@ -18,7 +18,15 @@
 
   You only need to re-calibrate if your enviroment or sensor change significatly: e.g. when you first install it on your boat.
 
-  --------------------------------------------------
+  Parameters passed to initialize the sensors
+
+  - I2C Address 
+  - True North (true/false)
+  - TASK (1 or 6)
+  - Declination
+
+
+  ------------------------------------------ THE ORIGINAL COMMENTS -----------------------------------------
   
   "quaternion_compass_new_v8.ino"
   Code by LINGIB
@@ -88,18 +96,23 @@
 
 #include <SPI.h>
 #include <Wire.h>
+#include "MPU9250_QuaternionCompass.cpp"
+#include "sensesp.h"
+#include <RemoteDebug.h>
 
 #if defined(ARDUINO_SAMD_ZERO) && defined(SERIAL_PORT_USBVIRTUAL)
 #define Serial SERIAL_PORT_USBVIRTUAL                               // Required for Serial on Zero based boards
 #endif
 
+#define showAllDebug true
+
 // ----- configure 16x2 LCD display
 /* Comment-out the following line if you are not using a 16x2 LCD */
-#define LCD2
+// #define LCD2
 #ifdef LCD2
 #include <LiquidCrystal_I2C.h>                                      // YwRobot Arduino LCM1602 IIC V1 library  
 //LiquidCrystal_I2C lcd(0x27, 2, 1, 0, 4, 5, 6, 7, 3, POSITIVE);      // LCD pinouts: addr,en,rw,rs,d4,d5,d6,d7,bl,blpol
-LiquidCrystal_I2C lcd(0x3F,16,2);      // LCD pinouts: addr,en,rw,rs,d4,d5,d6,d7,bl,blpol
+LiquidCrystal_I2C lcd(0x3F,16,2);      // LCD pinouts: I2C Address, columns, lines
 #endif
 
 // ----- Arduino pin definitions
@@ -118,7 +131,9 @@ byte myLed = 13;                                                    // Set up pi
   #define TASK 6    // View ... pitch, roll, and compass-heading on 16x2 LCD display
 */
 
-#define TASK 6
+//  Only Task 1 and 6 are supported in the SensESP version
+
+int TASK = 6;
 
 // ----- user offsets and scale-factors
 /*
@@ -144,64 +159,8 @@ byte myLed = 13;                                                    // Set up pi
   This method is more accurate, and more consistent, than method 1
 */
 
-// ----- M4 offsets & scale-factors (TASK 2)
-//float
-//Mag_x_offset = 268.835,
-//Mag_y_offset = 172.05501,
-//Mag_z_offset = -127.860016,
-//Mag_x_scale = 1.0001826,
-//Mag_y_scale = 0.9784463,
-//Mag_z_scale = 1.022334;
+// Sample Calibration Values;
 
-
-//// ----- M4 offsets & scale-factors (TASK 2)
-//float
-//Mag_x_offset = 276.005,
-//Mag_y_offset = 175.64001,
-//Mag_z_offset = -120.95001,
-//Mag_x_scale = 1.0028737,
-//Mag_y_scale = 0.9735984,
-//Mag_z_scale = 1.0248547;
-
-
-//// ----- NZ offsets & scale-factors (TASK 1)
-//float
-//Mag_x_offset = -34.56,
-//Mag_y_offset = 521.83,
-//Mag_z_offset = -115.10,
-//Mag_x_scale = 1.03,
-//Mag_y_scale = 1.03,
-//Mag_z_scale = 0.95;
-
-//// ----- NZ Offsets & Scale-factors (TASK 2)
-//float
-//Mag_x_offset = -34.560013,
-//Mag_y_offset = 528.885,
-//Mag_z_offset = -125.259995,
-//Mag_x_scale = 1.0247924,
-//Mag_y_scale = 0.99078894,
-//Mag_z_scale = 0.9853226;
-
-// ----- NZ offsets & scale-factors (TASK 2 ... 2nd run)
-// float
-// Mag_x_offset = -27.645004,
-// Mag_y_offset = 538.7565,
-// Mag_z_offset = -111.71501,
-// Mag_x_scale = 1.0281606,
-// Mag_y_scale = 0.9725401,
-// Mag_z_scale = 1.0008467;
-
-// ----- Magnetic declination
-
-// LdB Offset - Newbury
-/*float
-Mag_x_offset = 135.77,
-Mag_y_offset = 71.92,
-Mag_z_offset = 193.51,
-Mag_x_scale = 0.91,
-Mag_y_scale = 1.03,
-Mag_z_scale = 1.07;
-*/
 float
 Mag_x_offset = 185.78,
 Mag_y_offset = 0.00,
@@ -210,7 +169,8 @@ Mag_x_scale = 1.04,
 Mag_y_scale = 0.85,
 Mag_z_scale = 1.17;
 
-
+//  Put your calibrated values here and comment the above values out
+//  PASTE-HERE
 
 
 /*
@@ -473,12 +433,15 @@ float eInt[3] = {0.0f, 0.0f, 0.0f};                 // vector to hold integral e
 // -----------------
 // setup()
 // -----------------
+
+
+
 void setup()
 {
   Wire.begin();
-  Wire.setClock(400000);                            // 400 kbit/sec I2C speed
+  Wire.setClock(400000);                                // 400 kbit/sec I2C speed
   //  while (!Serial);                                  // required for Feather M4 Express
-  Serial.begin(115200);
+  //  Serial.begin(115200);
 
   //  Deal with PullUp resistors (LdB)
 
@@ -493,14 +456,16 @@ void setup()
   digitalWrite(myLed, HIGH);
   
   // ----- Display title
-  Serial.println(F("MPU-9250 Quaternion Compass"));
-  Serial.println("");
-  delay(2000);
+  if ((TASK == 1) || (showAllDebug)) {
+    Serial.println(F("MPU-9250 Quaternion Compass"));
+    Serial.println("");
+    delay(2000);
 
-  // ----- Level surface message
-  Serial.println(F("Place the compass on a level surface"));
-  Serial.println("");
-  delay(2000);
+    // ----- Level surface message
+    Serial.println(F("Place the compass on a level surface"));
+    Serial.println("");
+    delay(2000);
+  }
 
   // ------------------------
   // TASK 1,2,3,4,5 messages
@@ -561,58 +526,69 @@ void setup()
 
   if ((c == 0x71) || (c == 0x73)) // MPU9250=0x68; MPU9255=0x73
   {
-    Serial.println(F("MPU9250 is online..."));
-    Serial.println("");
+    if ((TASK ==1) || (showAllDebug)) {
+      Serial.println(F("MPU9250 is online..."));
+      Serial.println("");
+    }
 
-    MPU9250SelfTest(SelfTest); // Start by performing self test and reporting values
-    Serial.println(F("Self test (14% acceptable)"));
-    Serial.print(F("x-axis acceleration trim within : ")); Serial.print(SelfTest[0], 1); Serial.println(F("% of factory value"));
-    Serial.print(F("y-axis acceleration trim within : ")); Serial.print(SelfTest[1], 1); Serial.println(F("% of factory value"));
-    Serial.print(F("z-axis acceleration trim within : ")); Serial.print(SelfTest[2], 1); Serial.println(F("% of factory value"));
-    Serial.print(F("x-axis gyration trim within : ")); Serial.print(SelfTest[3], 1); Serial.println(F("% of factory value"));
-    Serial.print(F("y-axis gyration trim within : ")); Serial.print(SelfTest[4], 1); Serial.println(F("% of factory value"));
-    Serial.print(F("z-axis gyration trim within : ")); Serial.print(SelfTest[5], 1); Serial.println(F("% of factory value"));
-    Serial.println("");
+      MPU9250SelfTest(SelfTest); // Start by performing self test and reporting values
+    if ((TASK ==1) || (showAllDebug)) {
+      Serial.println(F("Self test (14% acceptable)"));
+      Serial.print(F("x-axis acceleration trim within : ")); Serial.print(SelfTest[0], 1); Serial.println(F("% of factory value"));
+      Serial.print(F("y-axis acceleration trim within : ")); Serial.print(SelfTest[1], 1); Serial.println(F("% of factory value"));
+      Serial.print(F("z-axis acceleration trim within : ")); Serial.print(SelfTest[2], 1); Serial.println(F("% of factory value"));
+      Serial.print(F("x-axis gyration trim within : ")); Serial.print(SelfTest[3], 1); Serial.println(F("% of factory value"));
+      Serial.print(F("y-axis gyration trim within : ")); Serial.print(SelfTest[4], 1); Serial.println(F("% of factory value"));
+      Serial.print(F("z-axis gyration trim within : ")); Serial.print(SelfTest[5], 1); Serial.println(F("% of factory value"));
+      Serial.println("");
+    }
+      calibrateMPU9250(gyroBias, accelBias); // Calibrate gyro and accelerometers, load biases in bias registers
 
-    calibrateMPU9250(gyroBias, accelBias); // Calibrate gyro and accelerometers, load biases in bias registers
+    if ((TASK ==1) || (showAllDebug)) {
+      Serial.println(F("MPU9250 accelerometer bias"));
+      Serial.print(F("x = ")); Serial.println((int)(1000 * accelBias[0]));
+      Serial.print(F("y = ")); Serial.println((int)(1000 * accelBias[1]));
+      Serial.print(F("z = ")); Serial.print((int)(1000 * accelBias[2]));
+      Serial.println(F(" mg"));
+      Serial.println("");
 
-    Serial.println(F("MPU9250 accelerometer bias"));
-    Serial.print(F("x = ")); Serial.println((int)(1000 * accelBias[0]));
-    Serial.print(F("y = ")); Serial.println((int)(1000 * accelBias[1]));
-    Serial.print(F("z = ")); Serial.print((int)(1000 * accelBias[2]));
-    Serial.println(F(" mg"));
-    Serial.println("");
-
-    Serial.println(F("MPU9250 gyro bias"));
-    Serial.print(F("x = ")); Serial.println(gyroBias[0], 1);
-    Serial.print(F("y = ")); Serial.println(gyroBias[1], 1);
-    Serial.print(F("z = ")); Serial.print(gyroBias[2], 1);
-    Serial.println(F(" o/s"));
-    Serial.println("");
-    delay(1000);
+      Serial.println(F("MPU9250 gyro bias"));
+      Serial.print(F("x = ")); Serial.println(gyroBias[0], 1);
+      Serial.print(F("y = ")); Serial.println(gyroBias[1], 1);
+      Serial.print(F("z = ")); Serial.print(gyroBias[2], 1);
+      Serial.println(F(" o/s"));
+      Serial.println("");
+      delay(1000);
+    }
 
     initMPU9250();
-    Serial.println(F("MPU9250 initialized for active data mode....")); // Initialize device for active mode read of acclerometer, gyroscope, and temperature
-    Serial.println("");
+    if ((TASK ==1) || (showAllDebug)) {
+      Serial.println(F("MPU9250 initialized for active data mode....")); // Initialize device for active mode read of acclerometer, gyroscope, and temperature
+      Serial.println("");
+    }
 
     // Read the WHO_AM_I register of the magnetometer, this is a good test of communication
     byte d = readByte(AK8963_ADDRESS, AK8963_WHO_AM_I);  // Read WHO_AM_I register for AK8963
     if (d == 0x48)
     {
-      // ----- AK8963 found
-      Serial.println(F("AK8963 is online ..."));
+      if ((TASK ==1) || (showAllDebug)) {
+        // ----- AK8963 found
+        Serial.println(F("AK8963 is online ..."));
+      }
 
       // Get magnetometer calibration from AK8963 ROM
       initAK8963(magCalibration);
-      Serial.println(F("AK8963 initialized for active data mode ...")); // Initialize device for active mode read of magnetometer
-      Serial.println("");
+      if ((TASK ==1) || (showAllDebug)) {
+        Serial.println(F("AK8963 initialized for active data mode ...")); // Initialize device for active mode read of magnetometer
+        Serial.println("");
 
-      Serial.println(F("Asahi sensitivity adjustment values"));
-      Serial.print(F("ASAX = ")); Serial.println(magCalibration[0], 2);
-      Serial.print(F("ASAY = ")); Serial.println(magCalibration[1], 2);
-      Serial.print(F("ASAZ = ")); Serial.println(magCalibration[2], 2);
-      Serial.println("");
-      delay(1000);
+        Serial.println(F("Asahi sensitivity adjustment values"));
+        Serial.print(F("ASAX = ")); Serial.println(magCalibration[0], 2);
+        Serial.print(F("ASAY = ")); Serial.println(magCalibration[1], 2);
+        Serial.print(F("ASAZ = ")); Serial.println(magCalibration[2], 2);
+        Serial.println("");
+        delay(1000);
+      }
     }
     else
     {
@@ -678,8 +654,9 @@ void setup()
 
     // ----- Message
     Serial.println(F("------------------------------------------"));
+    Serial.println(F("Search for PASTE-HERE in your code and "));
     Serial.println(F("Copy-&-paste the following code into your "));
-    Serial.println(F("Arduino header then delete the old code."));
+    Serial.println(F("there, following the example delete the old code"));
     Serial.println(F("------------------------------------------"));
     Serial.println(F(""));
     Serial.println(F("float"));
@@ -714,18 +691,6 @@ void loop()
 {
   refresh_data();                              // This must be done each time through the loop
   calc_quaternion();                           // This must be done each time through the loop
-
-  // ----- Processing Tasks
-  switch (TASK) {
-    case 2:
-      compass_cal();                          // Get compass offsets and scale-factors using Processing "compass_cal.pde" (circle-method)
-      break;
-    case 3:
-      compass_rose();                         // View compass heading using Processing "compass_rose.pde"
-      break;
-    default:
-      break;
-  }
 
   // ----- Perform these tasks every 500mS
   delt_t = millis() - count;
