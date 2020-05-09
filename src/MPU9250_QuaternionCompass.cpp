@@ -1449,7 +1449,7 @@ void MPU9250::MadgwickQuaternionUpdate(float ax, float ay, float az, float gx, f
   Similar to Madgwick scheme but uses proportional and integral filtering
   on the error between estimated reference vectors and measured ones.
 */
-void MPU9250:MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz)
+void MPU9250::MahonyQuaternionUpdate(float ax, float ay, float az, float gx, float gy, float gz, float mx, float my, float mz)
 {
   float q1 = q[0], q2 = q[1], q3 = q[2], q4 = q[3];   // short name local variable for readability
   float norm;
@@ -1544,7 +1544,7 @@ void MPU9250:MahonyQuaternionUpdate(float ax, float ay, float az, float gx, floa
 // refresh_data()
 // ------------------------
 /* Get current MPU-9250 register values */
-void MPU9250:refresh_data()
+void MPU9250::refresh_data()
 {
   // ----- If intPin goes high, all data registers have new data
   if (readByte(MPU9250_ADDRESS, INT_STATUS) & 0x01)
@@ -1603,7 +1603,7 @@ void MPU9250:refresh_data()
 // calc_quaternion()
 // ------------------------
 /* Send current MPU-9250 register values to Mahony quaternion filter */
-void MPU9250:calc_quaternion()
+void MPU9250::calc_quaternion()
 {
   Now = micros();
   deltat = ((Now - lastUpdate) / 1000000.0f); // set integration time by time elapsed since last filter update
@@ -1634,7 +1634,7 @@ void MPU9250:calc_quaternion()
 // compass_cal()
 // ------------------------
 /* Obtain magnetometer offsets and scale-factors using Processing "compass_cal.pde" */
-void MPU9250:compass_cal()
+void MPU9250::compass_cal()
 {
   // ----- Locals
   float
@@ -1681,7 +1681,7 @@ void MPU9250:compass_cal()
 // compass_rose()
 // ------------------------
 /* View heading using Processing "compass_rose.pde" */
-void MPU9250:compass_rose()
+void MPU9250::compass_rose()
 {
   // ----- read input character
   if (Serial.available()) {
@@ -1729,7 +1729,7 @@ void MPU9250:compass_rose()
 // view_registers_SM()
 // ------------------------
 /* View registers on serial monitor */
-void MPU9250:view_registers_SM()
+void MPU9250::view_registers_SM()
 {
   // ----- Print accelerometer values
   Serial.print("        Accel(mg)");
@@ -1760,7 +1760,7 @@ void MPU9250:view_registers_SM()
 // view_heading_SM()
 // ------------------------
 /* View heading on serila monitor */
-void MPU9250:view_heading_SM()
+void MPU9250::view_heading_SM()
 {
   //    Serial.print("Accel");
   //    print_number((short)(1000 * ax));
@@ -1856,7 +1856,7 @@ void MPU9250:view_heading_SM()
 // ------------------------
 // view_heading_LCD()
 // ------------------------
-void MPU9250:view_heading_LCD()
+void MPU9250::view_heading_LCD()
 {
   // ----- calculate pitch , roll, and yaw (radians)
   pitch = asin(2.0f * (q[1] * q[3] - q[0] * q[2]));
@@ -1935,7 +1935,7 @@ void MPU9250:view_heading_LCD()
 // print_number()
 // ------------------------
 /* Overloaded routine to stop integer numbers jumping around */
-long MPU9250:print_number(short number) {
+long MPU9250::print_number(short number) {
   String myString = String(number);
   short numberChars = myString.length();
   for (short i = 0; i < 6 - numberChars; i++) {
@@ -1948,7 +1948,7 @@ long MPU9250:print_number(short number) {
 // print_number()
 // ------------------------
 /* Overloaded routine to stop float numbers jumping around */
-float MPU9250:print_number(float number) {
+float MPU9250::print_number(float number) {
   String myString = String(number);
   short numberChars = myString.length();
   for (short i = 0; i < 6 - numberChars; i++) {

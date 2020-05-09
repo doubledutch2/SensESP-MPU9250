@@ -33,20 +33,20 @@ class MPU9250 : public Sensor {
     void  getMres();
     void  getGres();
     void  getAres();
-    void  readAccelData();
-    void  readGyroData();
-    void  readMagData();
-    void  readTempData();
-    void  initAK8963();
+    void  readAccelData(short *);
+    void  readGyroData(short *);
+    void  readMagData(short *);
+    short readTempData();
+    void  initAK8963(float *);
     void  initMPU9250();
-    void  calibrateMPU9250();
-    void  magCalMPU9250();
-    void  MPU9250SelfTest();
-    void  writeByte();
-    byte  readByte(uint8,int);
-    void  readBytes();
-    void  MadgwickQuaternionUpdate();
-    void  MahonyQuaternionUpdate();
+    void  calibrateMPU9250(float *,float *);
+    void  magCalMPU9250(float *,float *);
+    void  MPU9250SelfTest(float *);
+    void  writeByte(byte,byte,byte);
+    byte  readByte(byte,byte);
+    void  readBytes(byte, byte, byte, byte *);
+    void  MadgwickQuaternionUpdate(float,float,float,float,float,float,float,float,float);
+    void  MahonyQuaternionUpdate(float, float, float, float, float, float, float, float,float);
     void  refresh_data();
     void  calc_quaternion();
     void  compass_cal();
@@ -54,8 +54,9 @@ class MPU9250 : public Sensor {
     void  view_registers_SM();
     void  view_heading_SM();
     void  view_heading_LCD();
-    void  print_number();
-
+    float print_number(float);
+    long  print_number(short);
+    
     //  virtual JsonObject& get_configuration(JsonBuffer& buf) override;
     //  virtual bool set_configuration(const JsonObject& config) override;
     //  virtual String get_config_schema() override;
