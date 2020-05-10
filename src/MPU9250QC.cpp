@@ -102,7 +102,7 @@
 #define Serial SERIAL_PORT_USBVIRTUAL                               // Required for Serial on Zero based boards
 #endif
 
-#define showAllDebug true
+#define showAllDebug false
 
 // ----- configure 16x2 LCD display
 /* Comment-out the following line if you are not using a 16x2 LCD */
@@ -1881,19 +1881,23 @@ void MPU9250::view_heading_SM()
   if (heading >= 360) heading -= 360.0;
 
   // ----- send the results to the Serial Monitor
-  Serial.print("        Pitch ");
-  print_number((short)pitch);
-  Serial.print("        Roll ");
-  print_number((short)roll);
-  Serial.print("        Heading ");
-  print_number((short)heading);
+  if (showAllDebug) {
+    Serial.print("        Pitch ");
+    print_number((short)pitch);
+    Serial.print("        Roll ");
+    print_number((short)roll);
+    Serial.print("        Heading ");
+    print_number((short)heading);
+  }
 
   // ----- Print temperature in degrees Centigrade
   tempCount = readTempData();                               // Read the temperature registers
   temperature = ((float) tempCount) / 333.87 + 21.0;        // Temp in degrees C
-  Serial.print("        Temp(C) ");
-  Serial.print(temperature, 1);
-  
+  if (showAllDebug) {
+    Serial.print("        Temp(C) ");
+    Serial.print(temperature, 1);
+  }
+
   /*
     With these settings the filter is updating at a ~145 Hz rate using the Madgwick scheme and
     > 200 Hz using the Mahony scheme even though the display refreshes at only 2 Hz.

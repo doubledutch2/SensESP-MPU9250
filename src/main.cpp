@@ -65,7 +65,7 @@ ReactESP app([] () {
   
   // MPU9250 myIMU(0x68, Wire, 40000);
   auto* mMPU9250 = new MPU9250(I2C_ADDRESS,
-                              1, // Calibrate
+                              6, // Calibrate
                               true, // True North,
                               0, // Declination
                               read_delay,
@@ -73,8 +73,7 @@ ReactESP app([] () {
    
   auto* pMPU9250yaw = new MPU9250value(mMPU9250, Heading, read_delay, "/motion/heading");    
         pMPU9250yaw->connectTo(new SKOutputNumber("vessel.motion.heading","/heading/skPath"));
-        
-  /*
+
   auto* pMPU9250pitch = new MPU9250value(mMPU9250, Pitch, read_delay, "/motion/pitch");    
         pMPU9250pitch->connectTo(new SKOutputNumber("vessel.motion.pitch","/pitch/skPath"));
 
