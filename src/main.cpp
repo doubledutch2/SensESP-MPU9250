@@ -70,19 +70,20 @@ ReactESP app([] () {
                               0, // Declination
                               read_delay,
                               "/ahrs/mpu9250"); // Create an instance of the class and start reading data. We only do that once
-  /*  
-  auto* pMPU9250yaw = new mpu9250value(mMPU9250, yaw, read_delay, "/motion/yaw");    
-        pMPU9250yaw->connectTo(new SKOutputNumber("vessel.motion.yaw","/yaw/skPath"));
-  
-  auto* pMPU9250pitch = new mpu9250value(mMPU9250, pitch, read_delay, "/motion/pitch");    
+   
+  auto* pMPU9250yaw = new MPU9250value(mMPU9250, Heading, read_delay, "/motion/heading");    
+        pMPU9250yaw->connectTo(new SKOutputNumber("vessel.motion.heading","/heading/skPath"));
+        
+  /*
+  auto* pMPU9250pitch = new MPU9250value(mMPU9250, Pitch, read_delay, "/motion/pitch");    
         pMPU9250pitch->connectTo(new SKOutputNumber("vessel.motion.pitch","/pitch/skPath"));
 
-  auto* pMPU9250roll = new mpu9250value(mMPU9250, roll, read_delay, "/motion/roll");    
+  auto* pMPU9250roll = new MPU9250value(mMPU9250, Roll, read_delay, "/motion/roll");    
         pMPU9250roll->connectTo(new SKOutputNumber("vessel.motion.roll","/yaw/skPath"));
 
-  auto* pMPU9250xAcc = new mpu9250value(mMPU9250, xAcc, read_delay, "/motion/xAcc");    
-        pMPU9250xAcc->connectTo(new SKOutputNumber("vessel.motion.xAcc","/xAcc/skPath"));
-
+  auto* pMPU9250xAcc = new MPU9250value(mMPU9250, Temperature, read_delay, "/motion/xAcc");    
+        pMPU9250xAcc->connectTo(new SKOutputNumber("environment.outside.temperature","/temperature/skPath"));
+/*
   auto* pMPU9250yAcc = new mpu9250value(mMPU9250, yAcc, read_delay, "/motion/yAcc");    
         pMPU9250yAcc->connectTo(new SKOutputNumber("vessel.motion.yAcc","/yAcc/skPath"));
 

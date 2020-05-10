@@ -419,7 +419,7 @@ float zeta = sqrt(3.0f / 4.0f) * GyroMeasDrift;     // compute zeta, the other f
 
 unsigned long delt_t = 0;                           // used to control display output rate
 unsigned long count = 0, sumCount = 0;              // used to control display output rate
-float pitch, roll, yaw;
+float pitch, roll, yaw, heading;
 float deltat = 0.0f, sum = 0.0f;                    // integration interval for both filter schemes
 unsigned long lastUpdate = 0, firstUpdate = 0;      // used to calculate integration interval
 unsigned long Now = 0;                              // used to calculate integration interval
@@ -713,6 +713,72 @@ boolean MPU9250::perform_setup()
   }
 }
 
+MPU9250value::MPU9250value( MPU9250 *       pMPU9250,
+                            MPU9250ValType  val_type,
+                            uint            read_delay,
+                            String          config_path) //:
+  //  NumericSensor(config_path),
+  //  val_type{val_type},
+  //  read_delay{read_delay}
+{
+  //  className = "MPU9250Value";
+  //  load_configuration();
+}
+
+float MPU9250value::round2decs(float input) 
+{
+    float tmpFloat;
+    tmpFloat = input * 100;
+    tmpFloat = int(tmpFloat);
+    tmpFloat = tmpFloat / 100;
+    return tmpFloat;
+}
+
+void MPU9250value::enable()
+{
+  /*
+    app.onRepeat(read_delay,[this]() {
+        switch(val_type) {
+          case (Heading):     output = round2decs(heading);       break;
+          case (Pitch):       output = round2decs(pitch);         break;
+          case (Roll):        output = round2decs(roll);          break;
+          case (Temperature): output = round2decs(temperature);   break;
+          default:            output = 0.00;
+        }
+        notify();
+    });
+  */
+}
+JsonObject& MPU9250value::get_configuration(JsonBuffer& buf) {
+  JsonObject& root = buf.createObject();
+  root["read_delay"] = read_delay;
+  root["value"] = output;
+  return root;
+  };
+
+  static const char SCHEMA[] PROGMEM = R"###({
+    "type": "object",
+    "properties": {
+        "read_delay": { "title": "Read delay", "type": "number", "description": "The time, in milliseconds, between each read of the input" },
+        "value": { "title": "Last value", "type" : "number", "readOnly": true }
+    }
+  })###";
+
+
+  String MPU9250value::get_config_schema() {
+  return FPSTR(SCHEMA);
+}
+
+bool MPU9250value::set_configuration(const JsonObject& config) {
+  String expected[] = {"read_delay"};
+  for (auto str : expected) {
+    if (!config.containsKey(str)) {
+      return false;
+    }
+  }
+  read_delay = config["read_delay"];
+  return true;
+}
 // ----------
 // loop()
 // ----------
@@ -1935,7 +2001,7 @@ void MPU9250::view_heading_LCD()
 // print_number()
 // ------------------------
 /* Overloaded routine to stop integer numbers jumping around */
-long MPU9250::print_number(short number) {
+void MPU9250::print_number(short number) {
   String myString = String(number);
   short numberChars = myString.length();
   for (short i = 0; i < 6 - numberChars; i++) {
@@ -1948,7 +2014,7 @@ long MPU9250::print_number(short number) {
 // print_number()
 // ------------------------
 /* Overloaded routine to stop float numbers jumping around */
-float MPU9250::print_number(float number) {
+void MPU9250::print_number(float number) {
   String myString = String(number);
   short numberChars = myString.length();
   for (short i = 0; i < 6 - numberChars; i++) {
