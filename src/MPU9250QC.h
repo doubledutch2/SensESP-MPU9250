@@ -27,6 +27,10 @@ class MPU9250 : public Sensor {
     boolean SensorRead = false;
     uint  read_delay;
     void read_values(boolean AHRS);
+    float temperature=0;
+    float heading=0;
+    float roll=0;
+    float pitch=0;
     
   private:
     uint8_t addr;

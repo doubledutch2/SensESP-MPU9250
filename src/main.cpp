@@ -10,7 +10,7 @@
 #include "wiring_helpers.h"
 #include "i2c_tools.h"
 #include "transforms/linear.h"
-#include "MPU9250_QuaternionCompass.h"
+#include "MPU9250QC.h"
 
 #define  I2C_ADDRESS 0x68 //  Address of the MPU9280 on I2C
 /*
@@ -60,7 +60,7 @@ ReactESP app([] () {
   */
   // DallasTemperatureSensors* dts = new DallasTemperatureSensors(D7);
 
-  uint read_delay = 5000;
+  uint read_delay = 10000;
   scan_i2c();
   
   // MPU9250 myIMU(0x68, Wire, 40000);
