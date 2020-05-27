@@ -65,7 +65,7 @@ ReactESP app([] () {
   
   // MPU9250 myIMU(0x68, Wire, 40000);
   auto* mMPU9250 = new MPU9250(I2C_ADDRESS,
-                              6, // Calibrate
+                              6, // Calibrate = 1, Run = 6
                               true, // True North,
                               0, // Declination
                               read_delay,

@@ -158,7 +158,7 @@ int TASK = 6;
 */
 
 // Sample Calibration Values;
-
+/*
 float
 Mag_x_offset = 185.78,
 Mag_y_offset = 0.00,
@@ -166,6 +166,15 @@ Mag_z_offset = 255.72,
 Mag_x_scale = 1.04,
 Mag_y_scale = 0.85,
 Mag_z_scale = 1.17;
+*/
+
+float
+Mag_x_offset = -286.76,
+Mag_y_offset = 287.70,
+Mag_z_offset = -400.85,
+Mag_x_scale = 0.90,
+Mag_y_scale = 0.89,
+Mag_z_scale = 1.31;
 
 //  Put your calibrated values here and comment the above values out
 //  PASTE-HERE
@@ -549,86 +558,68 @@ boolean MPU9250::perform_setup()
 
   if ((c == 0x71) || (c == 0x73)) // MPU9250=0x68; MPU9255=0x73
   {
-    if (TASK ==1) {
-      if (showAllDebug) {
-        Serial.println(F("MPU9250 is online..."));
-        Serial.println("");
-      }
+    if ((TASK ==1) || (showAllDebug)) {
+      Serial.println(F("MPU9250 is online..."));
+      Serial.println("");
     }
-    else {
-      return false;
-    }
-
+    
     MPU9250SelfTest(SelfTest); // Start by performing self test and reporting values
-    if (TASK ==1) {
-      if (showAllDebug) {
-        Serial.println(F("Self test (14% acceptable)"));
-        Serial.print(F("x-axis acceleration trim within : ")); Serial.print(SelfTest[0], 1); Serial.println(F("% of factory value"));
-        Serial.print(F("y-axis acceleration trim within : ")); Serial.print(SelfTest[1], 1); Serial.println(F("% of factory value"));
-        Serial.print(F("z-axis acceleration trim within : ")); Serial.print(SelfTest[2], 1); Serial.println(F("% of factory value"));
-        Serial.print(F("x-axis gyration trim within : ")); Serial.print(SelfTest[3], 1); Serial.println(F("% of factory value"));
-        Serial.print(F("y-axis gyration trim within : ")); Serial.print(SelfTest[4], 1); Serial.println(F("% of factory value"));
-        Serial.print(F("z-axis gyration trim within : ")); Serial.print(SelfTest[5], 1); Serial.println(F("% of factory value"));
-        Serial.println("");
-      }
+    if ((TASK ==1) || (showAllDebug)) {
+      Serial.println(F("Self test (14% acceptable)"));
+      Serial.print(F("x-axis acceleration trim within : ")); Serial.print(SelfTest[0], 1); Serial.println(F("% of factory value"));
+      Serial.print(F("y-axis acceleration trim within : ")); Serial.print(SelfTest[1], 1); Serial.println(F("% of factory value"));
+      Serial.print(F("z-axis acceleration trim within : ")); Serial.print(SelfTest[2], 1); Serial.println(F("% of factory value"));
+      Serial.print(F("x-axis gyration trim within : ")); Serial.print(SelfTest[3], 1); Serial.println(F("% of factory value"));
+      Serial.print(F("y-axis gyration trim within : ")); Serial.print(SelfTest[4], 1); Serial.println(F("% of factory value"));
+      Serial.print(F("z-axis gyration trim within : ")); Serial.print(SelfTest[5], 1); Serial.println(F("% of factory value"));
+      Serial.println("");
     }
     calibrateMPU9250(gyroBias, accelBias); // Calibrate gyro and accelerometers, load biases in bias registers
 
-    if (TASK ==1) {
-      if (showAllDebug) {
-        Serial.println(F("MPU9250 accelerometer bias"));
-        Serial.print(F("x = ")); Serial.println((int)(1000 * accelBias[0]));
-        Serial.print(F("y = ")); Serial.println((int)(1000 * accelBias[1]));
-        Serial.print(F("z = ")); Serial.print((int)(1000 * accelBias[2]));
-        Serial.println(F(" mg"));
-        Serial.println("");
+    if ((TASK ==1) || (showAllDebug)) {
+      Serial.println(F("MPU9250 accelerometer bias"));
+      Serial.print(F("x = ")); Serial.println((int)(1000 * accelBias[0]));
+      Serial.print(F("y = ")); Serial.println((int)(1000 * accelBias[1]));
+      Serial.print(F("z = ")); Serial.print((int)(1000 * accelBias[2]));
+      Serial.println(F(" mg"));
+      Serial.println("");
 
-        Serial.println(F("MPU9250 gyro bias"));
-        Serial.print(F("x = ")); Serial.println(gyroBias[0], 1);
-        Serial.print(F("y = ")); Serial.println(gyroBias[1], 1);
-        Serial.print(F("z = ")); Serial.print(gyroBias[2], 1);
-        Serial.println(F(" o/s"));
-        Serial.println("");
-        delay(1000);
-      }
+      Serial.println(F("MPU9250 gyro bias"));
+      Serial.print(F("x = ")); Serial.println(gyroBias[0], 1);
+      Serial.print(F("y = ")); Serial.println(gyroBias[1], 1);
+      Serial.print(F("z = ")); Serial.print(gyroBias[2], 1);
+      Serial.println(F(" o/s"));
+      Serial.println("");
+      delay(1000);
     }
 
     initMPU9250();
-    if (TASK ==1) {
-      if (showAllDebug) {
-        Serial.println(F("MPU9250 initialized for active data mode....")); // Initialize device for active mode read of acclerometer, gyroscope, and temperature
-        Serial.println("");
-      }
-    }
-    else {
-      return false;
+    if ((TASK ==1) || (showAllDebug)) {
+      Serial.println(F("MPU9250 initialized for active data mode....")); // Initialize device for active mode read of acclerometer, gyroscope, and temperature
+      Serial.println("");
     }
 
     // Read the WHO_AM_I register of the magnetometer, this is a good test of communication
     byte d = readByte(AK8963_ADDRESS, AK8963_WHO_AM_I);  // Read WHO_AM_I register for AK8963
     if (d == 0x48)
     {
-      if (TASK ==1) {
-        if (showAllDebug) {
+      if ((TASK ==1) || (showAllDebug)) {
           // ----- AK8963 found
           Serial.println(F("AK8963 is online ..."));
-        }
       }
 
       // Get magnetometer calibration from AK8963 ROM
       initAK8963(magCalibration);
-      if (TASK ==1) {
-        if (showAllDebug) {
-          Serial.println(F("AK8963 initialized for active data mode ...")); // Initialize device for active mode read of magnetometer
-          Serial.println("");
+      if ((TASK ==1) || (showAllDebug)) {
+        Serial.println(F("AK8963 initialized for active data mode ...")); // Initialize device for active mode read of magnetometer
+        Serial.println("");
 
-          Serial.println(F("Asahi sensitivity adjustment values"));
-          Serial.print(F("ASAX = ")); Serial.println(magCalibration[0], 2);
-          Serial.print(F("ASAY = ")); Serial.println(magCalibration[1], 2);
-          Serial.print(F("ASAZ = ")); Serial.println(magCalibration[2], 2);
-          Serial.println("");
-          delay(1000);
-        }
+        Serial.println(F("Asahi sensitivity adjustment values"));
+        Serial.print(F("ASAX = ")); Serial.println(magCalibration[0], 2);
+        Serial.print(F("ASAY = ")); Serial.println(magCalibration[1], 2);
+        Serial.print(F("ASAZ = ")); Serial.println(magCalibration[2], 2);
+        Serial.println("");
+        delay(1000);
       }
     }
     else
@@ -755,10 +746,10 @@ void MPU9250value::enable()
   
     app.onRepeat(read_delay,[this]() {
         switch(val_type) {
-          case (Heading):     output = round2decs(pMPU9250->heading);       break;
-          case (Pitch):       output = round2decs(pMPU9250->pitch);         break;
-          case (Roll):        output = round2decs(pMPU9250->roll);          break;
-          case (Temperature): output = round2decs(pMPU9250->temperature);   break;
+          case (Heading):     output = round2decs(pMPU9250->heading);                 break;
+          case (Pitch):       output = round2decs(pMPU9250->pitch);                   break;
+          case (Roll):        output = round2decs(pMPU9250->roll);                    break;
+          case (Temperature): output = round2decs(pMPU9250->temperature + 273.15);    break;
           default:            output = 0.00;
         }
         notify();
@@ -1749,14 +1740,18 @@ void MPU9250::compass_cal()
   // ----- send string if link established
   if (LinkEstablished && ((InputChar == 's') || (InputChar == 'S'))) {
     InputChar = 'x';
-    Serial.println(OutputString);
+    if (showAllDebug) {
+      Serial.println(OutputString);
+    }
   }
 
   // ----- send 'S' if link not established
   if (micros() > Stop1) {
     Stop1 += Timer1;
     if (!LinkEstablished) {
-      Serial.println('S');
+    if (showAllDebug) {
+        Serial.println('S');
+      }
     }
   }
 }
@@ -1797,14 +1792,18 @@ void MPU9250::compass_rose()
 
   // ----- Send string if link established
   if (LinkEstablished && ((InputChar == 's') || (InputChar == 'S'))) {
-    Serial.println(OutputString);
+    if (showAllDebug) {
+      Serial.println(OutputString);
+    }
   }
 
   // ----- send 'S' if link not established
   if (micros() > Stop1) {
     Stop1 += Timer1;
     if (!LinkEstablished) {
-      Serial.println('S');
+      if (showAllDebug) {
+        Serial.println('S');
+      }
     }
   }
 }
@@ -1815,29 +1814,31 @@ void MPU9250::compass_rose()
 /* View registers on serial monitor */
 void MPU9250::view_registers_SM()
 {
-  // ----- Print accelerometer values
-  Serial.print("SM        Accel(mg)");
-  print_number((short)(1000 * ax));
-  print_number((short)(1000 * ay));
-  print_number((short)(1000 * az));
+  if (showAllDebug) {
+    // ----- Print accelerometer values
+    Serial.print("SM        Accel(mg)");
+    print_number((short)(1000 * ax));
+    print_number((short)(1000 * ay));
+    print_number((short)(1000 * az));
 
-  // ----- Print gyro values
-  Serial.print("        Gyro(dps)");
-  print_number((short)(gx));
-  print_number((short)(gy));
-  print_number((short)(gz));
+    // ----- Print gyro values
+    Serial.print("        Gyro(dps)");
+    print_number((short)(gx));
+    print_number((short)(gy));
+    print_number((short)(gz));
 
-  // ----- Print magnetometer values
-  Serial.print("        Mag(mG)");
-  print_number((short)(mx));
-  print_number((short)(my));
-  print_number((short)(mz));
+    // ----- Print magnetometer values
+    Serial.print("        Mag(mG)");
+    print_number((short)(mx));
+    print_number((short)(my));
+    print_number((short)(mz));
 
-  // ----- Print temperature in degrees Centigrade
-  tempCount = readTempData();  // Read the adc values
-  temperature = ((float) tempCount) / 333.87 + 21.0; // Temp in degrees C
-  Serial.print("        Temp(C) ");
-  Serial.println(temperature, 1);
+    // ----- Print temperature in degrees Centigrade
+    tempCount = readTempData();  // Read the adc values
+    temperature = ((float) tempCount) / 333.87 + 21.0; // Temp in degrees C
+    Serial.print("        Temp(C) ");
+    Serial.println(temperature, 1);
+  }
 }
 
 // ------------------------
@@ -1934,7 +1935,9 @@ void MPU9250::view_heading_SM()
   //      print_number((float) sumCount / sum, 2);
   //      Serial.print(" Hz");
 
-  Serial.println("");
+  if (showAllDebug) {
+    Serial.println("");
+  }
   count = millis();
 
   sumCount = 0;
@@ -2017,7 +2020,9 @@ void MPU9250::view_heading_LCD()
 #endif
 
   // ----- housekeeping
-  Serial.println("");
+  if (showAllDebug) {
+    Serial.println("");
+  }
   count = millis();
   sumCount = 0;
   sum = 0;
