@@ -47,7 +47,7 @@ ReactESP app([] () {
   #endif
 
   // boolean disableSystemSensors = true;
-  sensesp_app = new SensESPApp(noStdSensors);
+  sensesp_app = new SensESPApp("SensESP","","","",0,NONE);
 
   //  setupMPU9250();
 
@@ -79,7 +79,7 @@ ReactESP app([] () {
 
   auto* pMPU9250roll = new MPU9250value(mMPU9250, Roll, read_delay, "/motion/roll");    
         pMPU9250roll->connectTo(new SKOutputNumber("vessel.motion.roll","/yaw/skPath"));
-
+/*
   auto* pMPU9250xAcc = new MPU9250value(mMPU9250, Temperature, read_delay, "/motion/xAcc");    
         pMPU9250xAcc->connectTo(new SKOutputNumber("environment.outside.temperature","/temperature/skPath"));
 /*
